@@ -1,0 +1,5 @@
+{
+  "name": "AI Training Time Calculator",
+  "description": "A specialized calculator for estimating Large Language Model (LLM) training duration based on hardware specs and data size.",
+  "requestFramePermissions": []
+}
