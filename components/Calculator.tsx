@@ -47,25 +47,33 @@ export const Calculator: React.FC = () => {
     return days;
   }, [paramsB, tokensB, gpuCount, gpuFlops, mfu]);
 
+  // Estimated Tokens per GPU per Second (TGS)
+  const tgs = useMemo(() => {
+    if (resultDays <= 0 || gpuCount <= 0) return 0;
+    const totalTokens = tokensB * 1_000_000_000; // Tokens count
+    const totalSeconds = resultDays * 24 * 3600;
+    return totalTokens / (totalSeconds * gpuCount);
+  }, [tokensB, resultDays, gpuCount]);
+
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 md:p-8">
+    <div className="w-full max-w-6xl mx-auto p-3 sm:p-4 md:p-5 lg:p-6">
       
       {/* Header */}
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+      <div className="mb-6 md:mb-8 text-center">
+        <h1 className="text-3xl md:text-[32px] font-bold text-slate-900 mb-2 tracking-tight">
           AI 模型训练耗时计算器
         </h1>
-        <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+        <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto">
           基于业界标准公式估算大语言模型 (LLM) 训练所需时间
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5">
         
         {/* Left Column: Inputs */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-            <div className="flex items-center space-x-2 mb-6 border-b border-slate-100 pb-4">
+        <div className="lg:col-span-7 space-y-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-5">
+            <div className="flex items-center space-x-2 mb-4 border-b border-slate-100 pb-3">
               <Settings className="w-5 h-5 text-indigo-600" />
               <h2 className="text-lg font-semibold text-slate-800">模型与数据配置</h2>
             </div>
@@ -110,8 +118,8 @@ export const Calculator: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-            <div className="flex items-center space-x-2 mb-6 border-b border-slate-100 pb-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-5">
+            <div className="flex items-center space-x-2 mb-4 border-b border-slate-100 pb-3">
               <Server className="w-5 h-5 text-indigo-600" />
               <h2 className="text-lg font-semibold text-slate-800">算力资源配置</h2>
             </div>
@@ -126,7 +134,7 @@ export const Calculator: React.FC = () => {
                   min={1}
                 />
                 
-                <div>
+                 <div>
                    <InputGroup 
                     label="单卡算力 (FP16/BF16)" 
                     value={gpuFlops} 
@@ -139,7 +147,7 @@ export const Calculator: React.FC = () => {
                       <button
                         key={preset.name}
                         onClick={() => setGpuFlops(preset.flops)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors border ${
+                        className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-colors border ${
                           gpuFlops === preset.flops
                             ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
@@ -185,7 +193,7 @@ export const Calculator: React.FC = () => {
 
         {/* Right Column: Result */}
         <div className="lg:col-span-5">
-          <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 h-full shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="bg-slate-900 text-white rounded-3xl p-4 md:p-5 lg:p-6 h-full shadow-xl flex flex-col justify-between relative overflow-hidden">
              {/* Background decoration */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
@@ -201,6 +209,8 @@ export const Calculator: React.FC = () => {
                   {resultDays.toFixed(2)}
                  </div>
                  <div className="text-xl text-slate-400 mt-2 font-medium">天 (Days)</div>
+                 {/* <div className="text-xs text-slate-500 mt-1">Time = (6 × P × T) / (N × F × MFU)</div> */}
+                 <div className="text-xs text-slate-400 mt-1">TGS (Tokens/GPU/s): {tgs.toFixed(2)}</div>
               </div>
 
               {resultDays > 365 && (
@@ -227,6 +237,60 @@ export const Calculator: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* References */}
+      <div className="mt-10 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-5">
+        <h3 className="text-lg font-semibold text-slate-800 mb-3">理论依据与参考</h3>
+        <p className="text-sm text-slate-600 mb-3">
+          训练耗时估算基于参数规模、语料规模与算力利用率的经验公式，出自 Scaling Laws 和 Chinchilla 论文：
+        </p>
+        <ul className="list-disc pl-5 space-y-3 text-sm text-indigo-700 break-all">
+          <li className="space-y-1">
+            <div className="text-slate-700">
+              “Accounting for the backwards pass (approximately twice the compute as the forwards pass), we then define the estimated non-embedding compute as 
+C
+≈
+6
+​
+N
+ floating point operators per training token.” — 描述了损失与参数/Token 的标度关系，用于估算所需训练量。
+            </div>
+            <a className="hover:underline" href="https://ar5iv.labs.arxiv.org/html/2001.08361#:~:text=Accounting%20for%20the,per%20training%20token." target="_blank" rel="noreferrer">
+              Scaling Laws for Neural Language Models (Kaplan et al., 2020)
+            </a>
+          </li>
+          <li className="space-y-1">
+            <div className="text-slate-700">
+              “As in Kaplan et al. (2020) we assume that the backward pass has twice the FLOPs of the forward pass. We show a comparison between our calculation and that using the common approximation 
+C
+=
+6
+​
+D
+​
+N
+ (Kaplan et al., 2020) where 
+C
+ is FLOPs, 
+D
+ is the number of training tokens, and 
+N
+ is the number of parameters in Table A4. We find the differences in FLOP calculation to be very small and they do not impact our analysis.” — 提示在给定算力下的最优参数/Token 配比。
+            </div>
+            <a className="hover:underline" href="https://ar5iv.labs.arxiv.org/html/2203.15556#:~:text=%2B%20logits-,As%20in%20Kaplan%20et%C2%A0al.%20(,to%20be%20very%20small%20and%20they%20do%20not%20impact%20our%20analysis.,-Parameters" target="_blank" rel="noreferrer">
+              Training Compute-Optimal Large Language Models (Hoffmann et al., 2022)
+            </a>
+          </li>
+          <li className="space-y-1">
+            <div className="text-slate-700">
+              训练一个拥有 N 个参数的 Transformer 模型，处理一个 token 所需的 FLOPs 约为 6N，将这个值乘以总训练 token 数量 D，就得到了整个训练过程的总计算量：C = 6ND这个公式中的 6 是一个经验性的常数，它近似地代表了前向和反向传播的 FLOPs 总和与模型参数量 N 的比例关系
+            </div>
+            <a className="hover:underline" href="https://gemini.google.com/share/65cf51d23549" target="_blank" rel="noreferrer">
+              大模型计算量C=6×N×D的计算原理解释
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
   );
