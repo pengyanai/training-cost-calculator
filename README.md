@@ -2,7 +2,7 @@
 
 This is a simple training cost calculator for Engineers to estimate the cost of training a model.
 
-![preview](assets/preview.png)
+![preview](assets/preview.webp)
 
 
 ## Run Locally
